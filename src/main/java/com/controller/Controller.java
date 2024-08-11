@@ -1,11 +1,11 @@
 package com.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class Controller {
-    @GetMapping(path = "/")
+    @PostMapping(path = "/test")
     public String getHome(){
         return "Hello World";
     }

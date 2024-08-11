@@ -1,12 +1,16 @@
 package com.service;
 
 import com.ApiResponse.ApiResponse;
+import com.manager.config.TokenService;
 import com.model.User;
 import com.repository.UserCustomRepository;
 import com.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Service
 public class UserService {
@@ -14,6 +18,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private UserCustomRepository userCustomRepository;
+    @Autowired
+    private TokenService tokenService;
 
     public ApiResponse<User> saveUser(User user){
         try{
@@ -31,21 +37,26 @@ public class UserService {
         }
     }
 
-    public ApiResponse<String> verifyUserCredentials(String email, String password){
+    public ApiResponse<Map<String, String>> verifyUserCredentials(String email, String password){
         try{
             User user = userRepository.findById(email).orElse(null);
             if(user == null){
-                return new ApiResponse<String>(0, "User with email " + email.strip() + " not found.", null);
+                return new ApiResponse<>(0, "User with email " + email.strip() + " not found.", null);
             }
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             if(!encoder.matches(password, user.getPassword())){
-                return new ApiResponse<String>(0, "Invalid password", null);
+                return new ApiResponse<>(0, "Invalid password", null);
             }
-            return new ApiResponse<String>(1, "Login successful", null);
+            String token = tokenService.generateJwtToken(user.getEmail());
+            Map<String, String> data = new HashMap<>();
+            data.put("token", token);
+            return new ApiResponse<>(1, "Login successful", data);
         }
         catch (Exception e){
             System.out.println("Caught exception in verifyUserCredentials service: " + e.getMessage());
-            return new ApiResponse<String>(-1, "Failed to verify user credentials", null);
+            return new ApiResponse<>(-1, "Failed to verify user credentials", null);
         }
     }
+
+
 }

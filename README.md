@@ -198,4 +198,100 @@ public class ApiResponse<T> {
 }
 ```
 
-To be continued ...
+## Token based authentication using JWT
+* Required dependencies (Add below lines of code in pom.xml)
+```xml
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.11.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.11.5</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.11.5</version>
+</dependency>
+```
+* Firstly, it is important to understand that how an api request is passing through different stages i.e., *workflow*
+> 1. As we are using ***Spring boot security*** feature, by default it checks authentication for every API request.
+> <br>So first we are going to configure that security check
+```java
+package com.manager.config;
+// Import required packages
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Autowired
+    private TokenService tokenService;
+    
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+        // Here we are allowing api requests with paths ["/", "/api/auth/**"] to bypass without any authentication. All other requests need to be authenticated.
+        http.authorizeHttpRequests(requests -> requests
+                .requestMatchers("/", "/api/auth/**").permitAll()
+                .anyRequest().authenticated()
+        );
+        // Disabling CSRF
+        http.csrf(CsrfConfigurer::disable);
+        // Default settings to show login form for routes which required authentication, but we have to need with it.
+        http.formLogin(Customizer.withDefaults());
+        http.httpBasic(Customizer.withDefaults());
+        // For all the routes that need to authenticated we are going to check is user is authorized or not with ***Token***
+        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+    
+    @Bean
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        return new TokenAuthenticationFilter(tokenService);
+    }
+}
+```
+2. When user visits any route that needs authentication then ***SecurityFilterChain.tokenAuthenticationFilter()*** method is called.
+3. Then user token is being checked and if it is valid we will proceed with client request or we gonna reject it
+```java
+package com.manager.config;
+// Import required libraries
+public class TokenAuthenticationFilter extends OncePerRequestFilter {
+    // Service class for JWT token creating, validation and for extracting payload
+    private final TokenService tokenService;
+
+    public TokenAuthenticationFilter(TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
+    // This method is automatically triggered
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+        // Token is fetched from request header 
+        String token = getTokenFromRequest(request);
+        // If token is valid we are going to authenticate user with default privileges as we don't have user specific privileges
+        if (token != null && tokenService.isTokenValid(token)) {
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(null, null, null);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid or missing token");
+        }
+    }
+    // Extract token from request header
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}
+```
+
+
+<br>*To be continued...*

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class UserController {
@@ -41,8 +43,8 @@ public class UserController {
         }
     }
 
-    @PostMapping("/verify/credentials")
-    public ApiResponse<String> verifyUserCredentials(@RequestBody UserCredentials credentials){
+    @PostMapping("/login")
+    public ApiResponse<Map<String, String>> verifyUserCredentials(@RequestBody UserCredentials credentials){
         return userService.verifyUserCredentials(credentials.getEmail(), credentials.getPassword());
     }
 
