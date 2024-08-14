@@ -2,6 +2,7 @@ package com.manager.config;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
@@ -44,5 +45,13 @@ public class TokenService {
             .setExpiration(new Date(new Date().getTime() + JWT_EXPIRATION))
             .signWith(key)
             .compact();
+    }
+
+    public String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7).strip();
+        }
+        return null;
     }
 }

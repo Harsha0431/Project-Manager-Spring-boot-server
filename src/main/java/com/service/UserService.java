@@ -5,9 +5,11 @@ import com.manager.config.TokenService;
 import com.model.User;
 import com.repository.UserCustomRepository;
 import com.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +57,24 @@ public class UserService {
         catch (Exception e){
             System.out.println("Caught exception in verifyUserCredentials service: " + e.getMessage());
             return new ApiResponse<>(-1, "Failed to verify user credentials", null);
+        }
+    }
+
+    public ApiResponse<String> verifyUserToken(HttpServletRequest request){
+        try{
+            String token = tokenService.getTokenFromRequest(request);
+            if(token!=null && !token.isEmpty()){
+                boolean isTokenValid = tokenService.isTokenValid(token);
+                if(isTokenValid) {
+                    String payloadEmail = tokenService.getUserEmailFromToken(token);
+                    return new ApiResponse<>(1, "Login successful.", payloadEmail);
+                }
+            }
+            return new ApiResponse<>(0, "Invalid token or no token provided. Please login to continue", null);
+        }
+        catch (Exception e){
+            System.out.println("Caught exception in verifyUserToken in UserService due to ~ " + e.getMessage());
+            return new ApiResponse<>(-1, "", null);
         }
     }
 
