@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity(debug = true) // Don't debug in production
 public class SecurityConfig {
 
-    private static final String[] publicApis = {"/", "/api/auth/**"};
+    private static final String[] publicApis = {"/", "/api/auth/**", "/error"};
     @Autowired
     private TokenService tokenService;
 /*
