@@ -1,10 +1,9 @@
 package com.repository;
 
-import com.model.UserEducation;
+import com.model.UserDetails;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-// Delete this
 @Repository
-public interface Education extends CrudRepository<UserEducation, String> {
+public interface UserDetailsRepository extends CrudRepository<UserDetails, Long> {
 }

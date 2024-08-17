@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@DiscriminatorValue("user_graduation")
+@DiscriminatorValue("under_graduation")
 public class UnderGraduation extends UserEducation {
     private String name;
     @Column(name = "start_date")

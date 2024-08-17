@@ -78,5 +78,15 @@ public class UserService {
         }
     }
 
+    public User getUserObjectFromEmail(String email){
+        try{
+            return userRepository.findById(email).orElse(null);
+        }
+        catch (Exception e){
+            System.out.println("Caught exception in getUserObjectFromEmail from user service due to: " + e.getMessage());
+            return null;
+        }
+    }
+
 
 }

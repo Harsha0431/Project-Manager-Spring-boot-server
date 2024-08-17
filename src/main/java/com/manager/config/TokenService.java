@@ -1,5 +1,7 @@
 package com.manager.config;
 
+import com.model.User;
+import com.service.UserService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,5 +55,10 @@ public class TokenService {
             return bearerToken.substring(7).strip();
         }
         return null;
+    }
+
+    public User getUserObjectFromHeaderToken(HttpServletRequest request, UserService userService){
+        String email = getUserEmailFromToken(getTokenFromRequest(request));
+        return userService.getUserObjectFromEmail(email);
     }
 }

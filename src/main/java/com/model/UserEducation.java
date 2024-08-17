@@ -5,10 +5,14 @@ import jakarta.persistence.*;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "education_type", discriminatorType = DiscriminatorType.STRING)
-@Table(name = "education")
+@Table(name = "education", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_education",
+                columnNames = {"email", "education_type", "course"})
+})
 public class UserEducation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
