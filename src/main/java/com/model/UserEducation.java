@@ -15,7 +15,7 @@ public class UserEducation {
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "email", referencedColumnName = "email")
     private User user;
 

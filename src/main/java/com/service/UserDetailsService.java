@@ -2,22 +2,28 @@ package com.service;
 
 import com.ApiResponse.ApiResponse;
 import com.model.*;
+import com.repository.EducationOnlyRepository;
 import com.repository.EducationRepository;
-import com.repository.SchoolEducationRepository;
 import com.repository.UserDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserDetailsService {
     @Autowired
     private UserDetailsRepository userDetailsRepository;
     @Autowired
-    private SchoolEducationRepository schoolEducationEducationRepository;
+    private EducationRepository<SchoolEducation> schoolEducationEducationRepository;
     @Autowired
     private EducationRepository<UnderGraduation> underGraduationEducationRepository;
     @Autowired
     private EducationRepository<PostGraduation> postGraduationEducationRepository;
+    @Autowired
+    private EducationOnlyRepository educationOnlyRepository;
+    @Autowired
+    private UserService userService;
 
     public ApiResponse<UserDetails> addUserDetails(UserDetails details){
         ApiResponse<UserDetails> response = new ApiResponse<>();
@@ -61,10 +67,30 @@ public class UserDetailsService {
         return response;
     }
 
+    public ApiResponse<UserDetails> getUserDetails(String email){
+        ApiResponse<UserDetails> response = new ApiResponse<>();
+        try{
+            UserDetails details = userDetailsRepository.getUserDetailsWithEmail(email);
+            response.setCode(1);
+            response.setData(details);
+            response.setMessage("User details fetched successfully.");
+        }
+        catch (Exception e){
+            System.out.println("Caught exception in getting user details service: " + e.getMessage());
+            response.setCode(-1);
+            response.setMessage("Failed to get user details");
+            response.setData(null);
+        }
+        return response;
+    }
+
     // Education details
-    public ApiResponse<UserEducation> addUserEducation(UserEducation education, String type){
+    public ApiResponse<UserEducation> addUserEducation(UserEducation education, String type, String operation){
         ApiResponse<UserEducation> response = new ApiResponse<>();
         try{
+            if(operation.equals("update") && education.getId()==null){
+                throw new IllegalAccessException("Invalid education details to update");
+            }
             UserEducation savedObject = null;
             if(type.equals("school")){
                 savedObject = schoolEducationEducationRepository.save((SchoolEducation) education);
@@ -90,6 +116,49 @@ public class UserDetailsService {
                 response.setMessage("The combination of education type and course must be unique for a user.");
             else
                 response.setMessage("Failed to save education details");
+            response.setData(null);
+        }
+        return response;
+    }
+
+    // Delete education entity
+    public ApiResponse<String> deleteEducationEntityWithIdAndEmail(Long id, String email){
+        ApiResponse<String> response = new ApiResponse<>();
+        try{
+            UserEducation userEducation = educationOnlyRepository.findById(id).orElse(null);
+            if(userEducation == null){
+                return new ApiResponse<>(0, "No related education details found to delete.", null);
+            }
+            if(!userEducation.getUser().getEmail().equals(email)){
+                return new ApiResponse<>(-1, "No related education details found to delete.", null);
+            }
+            educationOnlyRepository.delete(userEducation);
+            response.setCode(1);
+            response.setMessage("Education details removed successfully.");
+            response.setData(null);
+        }
+        catch (Exception e){
+            System.out.println("Caught exception deleteEducationEntityWithIdAndEmail service due to: " + e.getMessage());
+            response.setCode(-1);
+            response.setMessage("Failed to delete education details.");
+            response.setData(null);
+        }
+        return response;
+    }
+
+    // Get education list
+    public ApiResponse<List<UserEducation>> getUserEducationList(User user){
+        ApiResponse<List<UserEducation>> response = new ApiResponse<>();
+        try{
+            List<UserEducation> userEducationList = educationOnlyRepository.findByUser(user);
+            response.setCode(1);
+            response.setMessage("Education details fetched successfully.");
+            response.setData(userEducationList);
+        }
+        catch (Exception e){
+            System.out.println("Caught exception getUserEducationList service due to: " + e.getMessage());
+            response.setCode(-1);
+            response.setMessage("Failed to get education details.");
             response.setData(null);
         }
         return response;

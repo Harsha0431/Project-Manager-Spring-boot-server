@@ -61,4 +61,17 @@ public class UserDetailsController {
         }
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<ApiResponse<UserDetails>> getUserDetails(HttpServletRequest request, HttpServletResponse response){
+        try{
+            String email = tokenService.getUserEmailFromToken(tokenService.getTokenFromRequest(request));
+            ApiResponse<UserDetails> res = userDetailsService.getUserDetails(email);
+            int status = res.getCode() == 1 ? 200 : 400;
+            return ResponseEntity.status(status).body(res);
+        }
+        catch (Exception e){
+            System.out.println("Caught exception getUserDetails in controller: " + e.getMessage());
+            return ResponseEntity.status(response.getStatus()).body(new ApiResponse<>(-1, "Failed to get user details.", null));
+        }
+    }
 }
